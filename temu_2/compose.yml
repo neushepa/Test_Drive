@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  moodle-redis:
+    image: redis:alpine
+    container_name: moodle-redis
+    restart: always
+    command:
+      [
+        "redis-server",
+        "--maxmemory",
+        "4gb",
+        "--maxmemory-policy",
+        "allkeys-lru",
+      ]
+    networks:
+      - proxy-net
+
+  moodle-db:
+    image: mariadb:10.11
+    container_name: moodle-db
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=On5laught100%
+      - MARIADB_DATABASE=moodle
+      - MARIADB_USER=ictskye24
+      - MARIADB_PASSWORD=On5laught100%
+      - MARIADB_CHARACTER_SET=utf8mb4
+      - MARIADB_COLLATE=utf8mb4_unicode_ci
+    command: >
+      --innodb-file-per-table=1
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --max-allowed-packet=128M
+      --max-connections=500
+      --innodb-buffer-pool-size=24G
+      --innodb-log-file-size=2G
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - proxy-net
+
+  moodle:
+    image: bitnami/moodle:5.2.3
+    container_name: moodle-app
+    restart: always
+    depends_on:
+      - moodle-db
+      - moodle-redis
+    environment:
+      - MOODLE_DATABASE_HOST=moodle-db
+      - MOODLE_DATABASE_PORT_NUMBER=3306
+      - MOODLE_DATABASE_USER=ictskye24
+      - MOODLE_DATABASE_PASSWORD=On5laught100%
+      - MOODLE_DATABASE_NAME=moodle
+      - MOODLE_SITE_NAME=SkyeExam
+      - MOODLE_URL=https://exam.skyedigipreneur.sch.id
+      - MOODLE_REVERSEPROXY=yes
+      - MOODLE_SSLPROXY=true
+      - MOODLE_USERNAME=superman
+      - MOODLE_PASSWORD=Lost100%
+      - MOODLE_EMAIL=ictdepartemenskyedigipreneur@gmail.com
+      - PHP_MEMORY_LIMIT=512M
+      - PHP_MAX_EXECUTION_TIME=300
+      - PHP_POST_MAX_SIZE=256M
+      - PHP_UPLOAD_MAX_FILESIZE=256M
+      - PHP_OPCACHE_ENABLE=1
+      - PHP_OPCACHE_MEMORY_CONSUMPTION=512
+    volumes:
+      - moodle_data:/bitnami/moodle
+      - moodledata_data:/bitnami/moodledata
+    networks:
+      - proxy-net
+
+volumes:
+  mariadb_data:
+  moodle_data:
+  moodledata_data:
+
+networks:
+  proxy-net:
+    external: true
+    
